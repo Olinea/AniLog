@@ -18,7 +18,7 @@ from app.utils.auth import (
 
 router = APIRouter()
 
-# 定义OAuth2密码承载器
+# 定义OAuth2密码承载器 (不再用于get_current_user，但保留以供login使用)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/login")
 
 def get_user(db: Session, username: str):
@@ -33,20 +33,20 @@ def authenticate_user(db: Session, username: str, password: str):
     return user
 
 async def get_current_user(
-    token: str = Depends(oauth2_scheme), 
-    session_token: Optional[str] = Cookie(None),
+    # 移除 token: str = Depends(oauth2_scheme),
+    session_token: str = Cookie(...), # 使 session_token 成为必需
     db: Session = Depends(get_db)
 ):
     """获取当前用户"""
-    # 优先使用Cookie中的令牌，如果没有则使用Authorization头
-    token_to_use = session_token or token
-    
+    # 直接使用Cookie中的令牌
+    token_to_use = session_token
+
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="无法验证凭据",
-        headers={"WWW-Authenticate": "Bearer"},
+        headers={"WWW-Authenticate": "Bearer"}, # 尽管不使用Bearer头，但保留此头是OAuth2规范的一部分
     )
-    
+
     try:
         payload = jwt.decode(token_to_use, SECRET_KEY, algorithms=[ALGORITHM])
         username = payload.get("sub")
@@ -54,11 +54,11 @@ async def get_current_user(
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    
+
     user = get_user(db, username=username)
     if user is None:
         raise credentials_exception
-    
+
     return user
 
 @router.post("/login")
