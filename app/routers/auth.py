@@ -17,7 +17,6 @@ from app.config import config
 
 router = APIRouter()
 
-# 定义OAuth2密码承载器 (不再用于get_current_user，但保留以供login使用)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/login")
 
 def get_user(db: Session, username: str):
@@ -34,7 +33,7 @@ def authenticate_user(db: Session, username: str, password: str):
 async def get_current_user(
     session_token: Optional[str] = Cookie(None),
     db: Session = Depends(get_db)
-) -> Optional[User]: # 修改返回类型提示为 Optional[User]
+) -> Optional[User]:
     """获取当前用户"""
     token_to_use = session_token
 
@@ -109,6 +108,6 @@ async def read_users_me(current_user: Optional[User] = Depends(get_current_user)
         # 如果认证失败 (current_user 为 None)，返回特定数据和 401 状态码
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            content={"detail": "Authentication failed", "code": 401} # 返回特定数据
+            content={"detail": "Authentication failed", "code": 401}
         )
     return current_user

@@ -10,7 +10,7 @@ class Animal(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), index=True, unique=True)
     nickname = Column(String(100), nullable=True)
-    gender = Column(String(10), nullable=True) # 例如: 'male', 'female', 'unknown'
+    gender = Column(Integer, nullable=True)
     characteristics = Column(Text, nullable=True)
     campus = Column(String(50), nullable=True)
     area = Column(String(50), nullable=True)

@@ -6,9 +6,10 @@ from app.db.database import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate, User as UserSchema
 from app.utils.auth import get_password_hash
-from app.routers.auth import get_current_user, get_required_user # 导入 get_required_user
+from app.routers.auth import get_current_user, get_required_user
 
 router = APIRouter()
+
 
 @router.post("/", response_model=UserSchema, status_code=status.HTTP_201_CREATED)
 async def create_user(user: UserCreate, db: Session = Depends(get_db)):
@@ -37,26 +38,28 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
 
     return db_user
 
+
 @router.get("/", response_model=List[UserSchema])
 async def read_users(
     skip: int = 0,
     limit: int = 10,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_required_user) # 依赖 get_required_user
+    current_user: User = Depends(get_required_user)
 ):
     """获取用户列表"""
-    # get_required_user 已经确保认证
+
     users = db.query(User).offset(skip).limit(limit).all()
     return users
+
 
 @router.get("/{user_id}", response_model=UserSchema)
 async def read_user(
     user_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_required_user) # 依赖 get_required_user
+    current_user: User = Depends(get_required_user)
 ):
     """获取指定用户"""
-    # get_required_user 已经确保认证
+
     db_user = db.query(User).filter(User.id == user_id).first()
     if db_user is None:
         raise HTTPException(status_code=404, detail="用户不存在")

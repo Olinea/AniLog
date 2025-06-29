@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import auth, users, items, photos, animals  # 导入 photos 和 animals
+from app.routers import auth, users, photos, animals
 from app.db.database import create_tables
 
 app = FastAPI(
@@ -19,15 +19,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 注册路由
 app.include_router(auth.router, prefix="/api", tags=["认证"])
 app.include_router(users.router, prefix="/api/users", tags=["用户"])
-app.include_router(items.router, prefix="/api/items", tags=["项目"])
 app.include_router(photos.router, prefix="/api/photos", tags=["图片"])
 app.include_router(animals.router, prefix="/api/animals", tags=["动物"])
 
 # 创建数据库表
 create_tables()
+
 
 @app.get("/")
 async def root():
