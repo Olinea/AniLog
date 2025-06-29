@@ -3,7 +3,7 @@ from typing import Optional
 from datetime import datetime
 
 class PhotoBase(BaseModel):
-    cat_id: int = Field(..., description="关联的猫的ID")
+    animal_id: int = Field(..., description="关联的动物的ID")
     photo_id: str = Field(..., description="OSS或其他外部系统的图片ID")
     photo_file_id: Optional[str] = Field(None, description="OSS或其他外部系统的文件ID")
     shooting_date: Optional[datetime] = Field(None, description="拍摄日期")
@@ -16,7 +16,7 @@ class PhotoCreate(PhotoBase):
 
 class PhotoUpdate(BaseModel):
     # 更新时可以只提供部分字段
-    cat_id: Optional[int] = Field(None, description="关联的猫的ID")
+    animal_id: Optional[int] = Field(None, description="关联的动物的ID")
     photo_id: Optional[str] = Field(None, description="OSS或其他外部系统的图片ID")
     photo_file_id: Optional[str] = Field(None, description="OSS或其他外部系统的文件ID")
     shooting_date: Optional[datetime] = Field(None, description="拍摄日期")

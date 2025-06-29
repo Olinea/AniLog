@@ -1,3 +1,6 @@
+# 环境变量文件
+.env
+
 # Python
 __pycache__/
 *.py[cod]

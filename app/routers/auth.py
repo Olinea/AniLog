@@ -11,11 +11,9 @@ from app.models.user import User
 from app.schemas.user import UserInDB
 from app.utils.auth import (
     verify_password,
-    create_access_token,
-    SECRET_KEY,
-    ALGORITHM,
-    ACCESS_TOKEN_EXPIRE_MINUTES
+    create_access_token
 )
+from app.config import config
 
 router = APIRouter()
 
@@ -44,7 +42,7 @@ async def get_current_user(
         return None
 
     try:
-        payload = jwt.decode(token_to_use, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token_to_use, config.secret_key, algorithms=[config.algorithm])
         username = payload.get("sub")
         if username is None:
             return None
@@ -82,7 +80,7 @@ async def login_for_access_token(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(minutes=config.access_token_expire_minutes)
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
@@ -92,7 +90,7 @@ async def login_for_access_token(
         key="session_token",
         value=access_token,
         httponly=True,  # 防止JavaScript访问
-        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        max_age=config.access_token_expire_minutes * 60,
         samesite="lax",  # 防止CSRF
     )
     

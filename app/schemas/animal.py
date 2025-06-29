@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
 
-class CatBase(BaseModel):
+class AnimalBase(BaseModel):
     name: str = Field(..., min_length=1)
     nickname: Optional[str] = None
     gender: Optional[str] = None
@@ -12,10 +12,10 @@ class CatBase(BaseModel):
     habit: Optional[str] = None
     is_active: bool = True
 
-class CatCreate(CatBase):
+class AnimalCreate(AnimalBase):
     pass
 
-class Cat(CatBase):
+class Animal(AnimalBase):
     id: int
     created_at: datetime
     updated_at: Optional[datetime] = None

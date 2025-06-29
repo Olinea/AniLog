@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from app.db.database import get_db
 from app.models.user import User
-from app.models.cat import Cat
+from app.models.animal import Animal
 from app.models.photo import Photo
 from app.schemas.photo import PhotoCreate, PhotoUpdate, Photo as PhotoSchema
 from app.routers.auth import get_current_user, get_required_user # 导入 get_required_user
@@ -30,13 +30,13 @@ async def create_photo(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_required_user)  # 依赖 get_required_user
 ):
-    """上传新猫图片"""
+    """上传新动物图片"""
     # get_required_user 已经确保认证
 
-    # 检查关联的猫是否存在
-    cat = db.query(Cat).filter(Cat.id == photo.cat_id).first()
-    if cat is None:
-        raise HTTPException(status_code=404, detail="关联的猫不存在")
+    # 检查关联的动物是否存在
+    animal = db.query(Animal).filter(Animal.id == photo.animal_id).first()
+    if animal is None:
+        raise HTTPException(status_code=404, detail="关联的动物不存在")
 
     # 检查 photo_id 是否已存在 (假设 photo_id 在外部系统中是唯一的)
     existing_photo = db.query(Photo).filter(
@@ -57,18 +57,18 @@ async def create_photo(
 
 @router.get("/", response_model=List[PhotoSchema])
 async def read_photos(
-    cat_id: Optional[int] = None,
+    animal_id: Optional[int] = None,
     skip: int = 0,
     limit: int = 10,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_required_user)  # 依赖 get_required_user
 ):
-    """获取猫图片列表"""
+    """获取动物图片列表"""
     # get_required_user 已经确保认证
 
     query = db.query(Photo)
-    if cat_id is not None:
-        query = query.filter(Photo.cat_id == cat_id)
+    if animal_id is not None:
+        query = query.filter(Photo.animal_id == animal_id)
 
     photos = query.offset(skip).limit(limit).all()
     return photos
@@ -80,7 +80,7 @@ async def read_photo(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_required_user)  # 依赖 get_required_user
 ):
-    """获取指定猫图片"""
+    """获取指定动物图片"""
     # get_required_user 已经确保认证
     db_photo = db.query(Photo).filter(Photo.id == photo_id).first()
     if db_photo is None:
@@ -95,7 +95,7 @@ async def update_photo(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_required_user)  # 依赖 get_required_user
 ):
-    """更新猫图片 (上传者或管理员权限)"""
+    """更新动物图片 (上传者或管理员权限)"""
     # get_required_user 已经确保认证
 
     db_photo = db.query(Photo).filter(Photo.id == photo_id).first()
@@ -103,8 +103,9 @@ async def update_photo(
         raise HTTPException(status_code=404, detail="图片不存在")
 
     # 检查权限：是上传者本人 或 manager >= 3
-    is_uploader = db_photo.user_id == current_user.id
-    is_manager = current_user.manager is not None and current_user.manager >= 3
+    is_uploader = bool(db_photo.user_id == current_user.id)
+    manager_value = getattr(current_user, "manager", None)
+    is_manager = (manager_value is not None and manager_value >= 3)
 
     # 如果尝试更新 verified 或 best 字段，必须是 manager >= 3
     update_data = photo_update.dict(exclude_unset=True)
@@ -123,11 +124,11 @@ async def update_photo(
             detail="权限不足，只有上传者或管理员可以修改图片信息",
         )
 
-    # 检查关联的猫是否存在 (如果 cat_id 被更新)
-    if 'cat_id' in update_data and update_data['cat_id'] != db_photo.cat_id:
-        cat = db.query(Cat).filter(Cat.id == update_data['cat_id']).first()
-        if cat is None:
-            raise HTTPException(status_code=404, detail="关联的猫不存在")
+    # 检查关联的动物是否存在 (如果 animal_id 被更新)
+    if 'animal_id' in update_data and update_data['animal_id'] != db_photo.animal_id:
+        animal = db.query(Animal).filter(Animal.id == update_data['animal_id']).first()
+        if animal is None:
+            raise HTTPException(status_code=404, detail="关联的动物不存在")
 
     # 检查 photo_id 是否已存在 (如果 photo_id 被更新)
     if 'photo_id' in update_data and update_data['photo_id'] != db_photo.photo_id:
@@ -150,7 +151,7 @@ async def delete_photo(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_required_user)  # 依赖 get_required_user
 ):
-    """删除猫图片 (上传者或管理员权限)"""
+    """删除动物图片 (上传者或管理员权限)"""
     # get_required_user 已经确保认证
 
     db_photo = db.query(Photo).filter(Photo.id == photo_id).first()
@@ -158,8 +159,9 @@ async def delete_photo(
         raise HTTPException(status_code=404, detail="图片不存在")
 
     # 检查权限：是上传者本人 或 manager >= 3
-    is_uploader = db_photo.user_id == current_user.id
-    is_manager = current_user.manager is not None and current_user.manager >= 3
+    is_uploader = bool(db_photo.user_id == current_user.id)
+    manager_value = getattr(current_user, "manager", None)
+    is_manager = (manager_value is not None and manager_value >= 3)
 
     if not is_uploader and not is_manager:
         raise HTTPException(
@@ -167,9 +169,6 @@ async def delete_photo(
             detail="权限不足，只有上传者或管理员可以删除图片",
         )
 
-    db.delete(db_photo)
-    db.commit()
-    return None
     db.delete(db_photo)
     db.commit()
     return None

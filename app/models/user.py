@@ -13,7 +13,7 @@ class User(Base):
     hashed_password = Column(String(100))
     openid = Column(String(255), unique=True, index=True, nullable=True)
     avatarUrl = Column(String(255), nullable=True)
-    manager = Column(Integer, nullable=True)
+    manager = Column(Integer, nullable=True, default=0)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

@@ -4,8 +4,8 @@ from sqlalchemy.orm import relationship # 导入 relationship
 
 from app.db.database import Base
 
-class Cat(Base):
-    __tablename__ = "cats"
+class Animal(Base):
+    __tablename__ = "animals"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), index=True, unique=True)
@@ -20,4 +20,4 @@ class Cat(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # 添加与 Photo 模型的关系
-    photos = relationship("Photo", back_populates="cat")
+    photos = relationship("Photo", back_populates="animal")

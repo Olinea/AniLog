@@ -1,9 +1,10 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from app.config import config
 
 # 数据库连接配置
-DATABASE_URL = "mysql+pymysql://fastapi:Wwtc26iKWA2BxRXp@23.158.24.109/fastapi"
+DATABASE_URL = config.database.url
 
 # 创建数据库引擎
 engine = create_engine(DATABASE_URL)
