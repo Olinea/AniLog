@@ -4,7 +4,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 from typing import Optional
-from fastapi.responses import JSONResponse # 添加此行导入 JSONResponse
+from fastapi.responses import JSONResponse
 
 from app.db.database import get_db
 from app.models.user import User
@@ -56,6 +56,16 @@ async def get_current_user(
         return None
 
     return user
+
+async def get_required_user(current_user: User = Depends(get_current_user)) -> User:
+    """获取当前用户 (如果未认证则抛出 401)"""
+    if current_user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="未认证",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return current_user
 
 @router.post("/login")
 async def login_for_access_token(

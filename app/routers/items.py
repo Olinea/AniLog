@@ -6,7 +6,7 @@ from app.db.database import get_db
 from app.models.user import User
 from app.models.item import Item
 from app.schemas.item import ItemCreate, Item as ItemSchema
-from app.routers.auth import get_current_user
+from app.routers.auth import get_current_user, get_required_user # 导入 get_required_user
 
 router = APIRouter()
 
@@ -14,7 +14,7 @@ router = APIRouter()
 async def create_item(
     item: ItemCreate, 
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_required_user) # 依赖 get_required_user
 ):
     """创建新项目"""
     db_item = Item(**item.dict(), owner_id=current_user.id)
@@ -28,7 +28,7 @@ async def read_items(
     skip: int = 0, 
     limit: int = 10, 
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_required_user) # 依赖 get_required_user
 ):
     """获取项目列表"""
     items = db.query(Item).filter(Item.owner_id == current_user.id).offset(skip).limit(limit).all()
@@ -38,7 +38,7 @@ async def read_items(
 async def read_item(
     item_id: int, 
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_required_user) # 依赖 get_required_user
 ):
     """获取指定项目"""
     db_item = db.query(Item).filter(Item.id == item_id, Item.owner_id == current_user.id).first()
@@ -51,7 +51,7 @@ async def update_item(
     item_id: int, 
     item: ItemCreate, 
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_required_user) # 依赖 get_required_user
 ):
     """更新项目"""
     db_item = db.query(Item).filter(Item.id == item_id, Item.owner_id == current_user.id).first()
@@ -69,7 +69,7 @@ async def update_item(
 async def delete_item(
     item_id: int, 
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_required_user) # 依赖 get_required_user
 ):
     """删除项目"""
     db_item = db.query(Item).filter(Item.id == item_id, Item.owner_id == current_user.id).first()
