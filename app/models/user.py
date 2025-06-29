@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship # 导入 relationship
 
 from app.db.database import Base
 
@@ -10,6 +11,15 @@ class User(Base):
     username = Column(String(50), unique=True, index=True)
     email = Column(String(100), unique=True, index=True)
     hashed_password = Column(String(100))
+    openid = Column(String(255), unique=True, index=True, nullable=True)
+    avatarUrl = Column(String(255), nullable=True)
+    manager = Column(Integer, nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # 添加与 Item 模型的关系 (已存在)
+    items = relationship("Item", back_populates="owner")
+
+    # 添加与 Photo 模型的关系
+    photos = relationship("Photo", back_populates="uploader")

@@ -4,14 +4,15 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 from typing import Optional
+from fastapi.responses import JSONResponse # 添加此行导入 JSONResponse
 
 from app.db.database import get_db
 from app.models.user import User
 from app.schemas.user import UserInDB
 from app.utils.auth import (
-    verify_password, 
-    create_access_token, 
-    SECRET_KEY, 
+    verify_password,
+    create_access_token,
+    SECRET_KEY,
     ALGORITHM,
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
@@ -33,31 +34,26 @@ def authenticate_user(db: Session, username: str, password: str):
     return user
 
 async def get_current_user(
-    # 移除 token: str = Depends(oauth2_scheme),
-    session_token: str = Cookie(...), # 使 session_token 成为必需
+    session_token: Optional[str] = Cookie(None),
     db: Session = Depends(get_db)
-):
+) -> Optional[User]: # 修改返回类型提示为 Optional[User]
     """获取当前用户"""
-    # 直接使用Cookie中的令牌
     token_to_use = session_token
 
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="无法验证凭据",
-        headers={"WWW-Authenticate": "Bearer"}, # 尽管不使用Bearer头，但保留此头是OAuth2规范的一部分
-    )
+    if token_to_use is None:
+        return None
 
     try:
         payload = jwt.decode(token_to_use, SECRET_KEY, algorithms=[ALGORITHM])
         username = payload.get("sub")
         if username is None:
-            raise credentials_exception
+            return None
     except JWTError:
-        raise credentials_exception
+        return None
 
     user = get_user(db, username=username)
     if user is None:
-        raise credentials_exception
+        return None
 
     return user
 
@@ -99,6 +95,12 @@ async def logout(response: Response):
     return {"message": "成功登出"}
 
 @router.get("/me")
-async def read_users_me(current_user: User = Depends(get_current_user)):
+async def read_users_me(current_user: Optional[User] = Depends(get_current_user)):
     """获取当前用户信息"""
+    if current_user is None:
+        # 如果认证失败 (current_user 为 None)，返回特定数据和 401 状态码
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"detail": "Authentication failed", "code": 401} # 返回特定数据
+        )
     return current_user
