@@ -1,47 +1,85 @@
-import os
 from typing import Optional
-from dotenv import load_dotenv
+from pydantic import Field, computed_field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from sqlalchemy import URL
 
-# 加载环境变量
-load_dotenv()
 
-class DatabaseConfig:
+class DatabaseConfig(BaseSettings):
     """数据库配置类"""
     
-    def __init__(self):
-        self.host = os.getenv("DB_HOST", "localhost")
-        self.port = int(os.getenv("DB_PORT", "3306"))
-        self.name = os.getenv("DB_NAME", "fastapi")
-        self.user = os.getenv("DB_USER", "root")
-        self.password = os.getenv("DB_PASSWORD", "")
-        self.driver = os.getenv("DB_DRIVER", "mysql+pymysql")
-        
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore"
+    )
+    
+    host: str = Field(default="localhost", alias="DB_HOST")
+    port: int = Field(default=3306, alias="DB_PORT")
+    name: str = Field(default="fastapi", alias="DB_NAME")
+    user: str = Field(default="root", alias="DB_USER")
+    password: str = Field(default="", alias="DB_PASSWORD")
+    driver: str = Field(default="mysql+pymysql", alias="DB_DRIVER")
+    database_url: Optional[str] = Field(default=None, alias="DATABASE_URL")
+
+    @computed_field
     @property
     def url(self) -> str:
         """构建数据库连接URL"""
         # 优先使用环境变量中的完整URL
-        database_url = os.getenv("DATABASE_URL")
-        if database_url:
-            return database_url
-            
-        # 否则从单独的配置项构建URL
-        return f"{self.driver}://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
-    
+        if self.database_url:
+            return self.database_url
+
+        url_obj = URL.create(
+            drivername=self.driver,
+            username=self.user,
+            password=self.password,
+            host=self.host,
+            port=self.port,
+            database=self.name
+        )
+        return str(url_obj)
+
     def __str__(self) -> str:
         """返回不包含密码的连接信息"""
-        return f"{self.driver}://{self.user}:***@{self.host}:{self.port}/{self.name}"
+        url_obj = URL.create(
+            drivername=self.driver,
+            username=self.user,
+            password="***",
+            host=self.host,
+            port=self.port,
+            database=self.name
+        )
+        return str(url_obj)
 
-class AppConfig:
+
+class AppConfig(BaseSettings):
     """应用配置类"""
     
-    def __init__(self):
-        self.debug = os.getenv("DEBUG", "False").lower() == "true"
-        self.secret_key = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
-        self.algorithm = os.getenv("ALGORITHM", "HS256")
-        self.access_token_expire_minutes = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
-        
-        # 数据库配置
-        self.database = DatabaseConfig()
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore"
+    )
+    
+    debug: bool = Field(default=False, alias="DEBUG")
+    secret_key: str = Field(
+        default="your-secret-key-change-in-production", 
+        alias="SECRET_KEY"
+    )
+    algorithm: str = Field(default="HS256", alias="ALGORITHM")
+    access_token_expire_minutes: int = Field(
+        default=30, 
+        alias="ACCESS_TOKEN_EXPIRE_MINUTES"
+    )
+
+    @computed_field
+    @property
+    def database(self) -> DatabaseConfig:
+        """数据库配置"""
+        return DatabaseConfig()
+
 
 # 创建全局配置实例
 config = AppConfig()
