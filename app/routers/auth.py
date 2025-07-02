@@ -93,21 +93,14 @@ async def login_for_access_token(
         samesite="lax",  # 防止CSRF
     )
     
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "user": user
+    }
 
 @router.post("/logout")
 async def logout(response: Response):
     """用户登出"""
     response.delete_cookie(key="session_token")
     return {"message": "成功登出"}
-
-@router.get("/me")
-async def read_users_me(current_user: Optional[User] = Depends(get_current_user)):
-    """获取当前用户信息"""
-    if current_user is None:
-        # 如果认证失败 (current_user 为 None)，返回特定数据和 401 状态码
-        return JSONResponse(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            content={"detail": "Authentication failed", "code": 401}
-        )
-    return current_user

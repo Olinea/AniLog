@@ -56,6 +56,24 @@ class DatabaseConfig(BaseSettings):
         return str(url_obj)
 
 
+class OSSConfig(BaseSettings):
+    """阿里云 OSS 配置类"""
+    
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore"
+    )
+    
+    access_key_id: str = Field(default="", alias="ALI_AK_ID")
+    access_key_secret: str = Field(default="", alias="ALI_AK_SECRET")
+    host: str = Field(default="https://ainlog233.oss-cn-wuhan-lr.aliyuncs.com", alias="OSS_HOST")
+    bucket: str = Field(default="ainlog233", alias="OSS_BUCKET")
+    dir_prefix: str = Field(default="user/", alias="OSS_DIR_PREFIX")
+    callback_url: str = Field(default="http://151.241.129.128:8000/photos/oss-callback", alias="OSS_CALLBACK_URL")
+
+
 class AppConfig(BaseSettings):
     """应用配置类"""
     
@@ -82,6 +100,12 @@ class AppConfig(BaseSettings):
     def database(self) -> DatabaseConfig:
         """数据库配置"""
         return DatabaseConfig()
+
+    @computed_field
+    @property
+    def oss(self) -> OSSConfig:
+        """OSS 配置"""
+        return OSSConfig()
 
 
 # 创建全局配置实例
