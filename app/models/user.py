@@ -18,8 +18,7 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
-    # 添加与 Item 模型的关系 (已存在)
-    items = relationship("Item", back_populates="owner")
-
     # 添加与 Photo 模型的关系
     photos = relationship("Photo", back_populates="uploader")
+    
+    # 注意：已删除对不存在的 Item 模型的引用

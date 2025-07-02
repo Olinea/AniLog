@@ -28,7 +28,9 @@ class DatabaseConfig(BaseSettings):
         """构建数据库连接URL"""
         # 优先使用环境变量中的完整URL
         if self.database_url:
-            return self.database_url
+            connection_url = self.database_url
+            print(f"使用环境变量中的完整数据库URL: {self.database_url.replace(self.password, '***') if self.password else self.database_url}")
+            return connection_url
 
         url_obj = URL.create(
             drivername=self.driver,
@@ -38,6 +40,7 @@ class DatabaseConfig(BaseSettings):
             port=self.port,
             database=self.name
         )
+        print(f"数据库连接信息: {self.__str__()}")
         return str(url_obj)
 
     def __str__(self) -> str:
