@@ -22,7 +22,7 @@ class Photo(PhotoBase):
     updated_at: Optional[datetime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class OSSCredentials(BaseModel):
@@ -34,6 +34,17 @@ class OSSCredentials(BaseModel):
     expire: int = Field(..., description="过期时间戳")
     callback: str = Field(..., description="Base64 编码的回调配置")
     dir: str = Field(..., description="上传目录")
+
+
+class PermissionCredentials(BaseModel):
+    """权限管理凭证"""
+    accessId: str = Field(..., description="AccessKey ID")
+    host: str = Field(..., description="OSS 主机地址")
+    policy: str = Field(..., description="Base64 编码的策略")
+    signature: str = Field(..., description="签名")
+    expire: int = Field(..., description="过期时间戳")
+    dir: str = Field(..., description="允许操作的目录")
+    permissions: list[str] = Field(..., description="权限列表：read, write, delete")
 
 
 class OSSCallback(BaseModel):

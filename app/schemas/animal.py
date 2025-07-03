@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
+from .photo import Photo
 
 class AnimalBase(BaseModel):
     name: str = Field(..., min_length=1)
@@ -19,6 +20,7 @@ class Animal(AnimalBase):
     id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
+    best_photo: Optional[Photo] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True

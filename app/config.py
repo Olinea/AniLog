@@ -71,7 +71,7 @@ class OSSConfig(BaseSettings):
     host: str = Field(default="https://ainlog233.oss-cn-wuhan-lr.aliyuncs.com", alias="OSS_HOST")
     bucket: str = Field(default="ainlog233", alias="OSS_BUCKET")
     dir_prefix: str = Field(default="user/", alias="OSS_DIR_PREFIX")
-    callback_url: str = Field(default="http://151.241.129.128:8000/photos/oss-callback", alias="OSS_CALLBACK_URL")
+    callback_url: str = Field(default="http://127.0.0.1:8000/api/photos/oss-callback", alias="OSS_CALLBACK_URL")
 
 
 class AppConfig(BaseSettings):

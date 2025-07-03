@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import and_
 from typing import List
 
 from app.db.database import get_db
 from app.models.user import User
 from app.models.animal import Animal
+from app.models.photo import Photo
 from app.schemas.animal import AnimalCreate, Animal as AnimalSchema
 from app.routers.auth import get_current_user, get_required_user
 
@@ -37,7 +39,12 @@ async def create_animal(
     db.add(db_animal)
     db.commit()
     db.refresh(db_animal)
-    return db_animal
+    
+    # 新创建的动物没有照片，best_photo为None
+    animal_data = AnimalSchema.from_orm(db_animal)
+    animal_data.best_photo = None
+    
+    return animal_data
 
 @router.get("/", response_model=List[AnimalSchema])
 async def read_animals(
@@ -47,8 +54,18 @@ async def read_animals(
     current_user: User = Depends(get_required_user)
 ):
     """获取动物列表"""
-    animals = db.query(Animal).offset(skip).limit(limit).all()
-    return animals
+    # 使用左连接获取动物和其最佳照片
+    animals_with_photos = db.query(Animal, Photo).outerjoin(
+        Photo, and_(Animal.id == Photo.animal_id, Photo.best == True)
+    ).offset(skip).limit(limit).all()
+    
+    result = []
+    for animal, best_photo in animals_with_photos:
+        animal_data = AnimalSchema.from_orm(animal)
+        animal_data.best_photo = best_photo
+        result.append(animal_data)
+    
+    return result
 
 @router.get("/{animal_id}", response_model=AnimalSchema)
 async def read_animal(
@@ -57,10 +74,19 @@ async def read_animal(
     current_user: User = Depends(get_required_user)
 ):
     """获取指定动物"""
-    db_animal = db.query(Animal).filter(Animal.id == animal_id).first()
-    if db_animal is None:
+    # 使用左连接获取动物和其最佳照片
+    result = db.query(Animal, Photo).outerjoin(
+        Photo, and_(Animal.id == Photo.animal_id, Photo.best == True)
+    ).filter(Animal.id == animal_id).first()
+    
+    if result is None:
         raise HTTPException(status_code=404, detail="动物不存在")
-    return db_animal
+    
+    animal, best_photo = result
+    animal_data = AnimalSchema.from_orm(animal)
+    animal_data.best_photo = best_photo
+    
+    return animal_data
 
 @router.put("/{animal_id}", response_model=AnimalSchema)
 async def update_animal(
@@ -85,7 +111,17 @@ async def update_animal(
 
     db.commit()
     db.refresh(db_animal)
-    return db_animal
+    
+    # 获取最佳照片
+    best_photo = db.query(Photo).filter(
+        Photo.animal_id == animal_id, 
+        Photo.best == True
+    ).first()
+    
+    animal_data = AnimalSchema.from_orm(db_animal)
+    animal_data.best_photo = best_photo
+    
+    return animal_data
 
 @router.delete("/{animal_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_animal(
