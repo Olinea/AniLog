@@ -23,5 +23,17 @@ class User(UserBase):
         "from_attributes": True
     }
 
+class UserResponse(UserBase):
+    """用户响应模型，排除敏感信息"""
+    id: int
+    openid: Optional[str] = None
+    avatarUrl: Optional[str] = None
+    manager: Optional[int] = 0
+    created_at: datetime
+    
+    model_config = {
+        "from_attributes": True
+    }
+
 class UserInDB(User):
     hashed_password: str

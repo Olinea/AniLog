@@ -45,6 +45,7 @@ class PermissionCredentials(BaseModel):
     expire: int = Field(..., description="过期时间戳")
     dir: str = Field(..., description="允许操作的目录")
     permissions: list[str] = Field(..., description="权限列表：read, write, delete")
+    callback: str = Field(..., description="Base64 编码的回调配置")
 
 
 class OSSCallback(BaseModel):

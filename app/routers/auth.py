@@ -5,7 +5,7 @@ from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 from typing import Optional
 from fastapi.responses import JSONResponse
-from app.schemas.user import User as UserSchema
+from app.schemas.user import User as UserSchema, UserResponse
 
 from app.db.database import get_db
 from app.models.user import User
@@ -130,9 +130,9 @@ async def login_for_access_token(
         samesite="lax",  # 防止CSRF
     )
 
-    # 转换为 Pydantic 模型以排除 hashed_password
+    # 转换为 Pydantic 模型以排除敏感信息
 
-    user_data = UserSchema.model_validate(user)
+    user_data = UserResponse.model_validate(user)
 
     return {
         "access_token": access_token,
@@ -151,6 +151,5 @@ async def logout(response: Response):
 @router.get("/me")
 async def get_current_user_info(current_user: User = Depends(get_required_user)):
     """验证并获取当前登录用户信息"""
-    from app.schemas.user import User as UserSchema
-    user_data = UserSchema.model_validate(current_user)
+    user_data = UserResponse.model_validate(current_user)
     return {"user": user_data}

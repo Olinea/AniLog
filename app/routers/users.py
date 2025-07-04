@@ -4,14 +4,14 @@ from typing import List
 
 from app.db.database import get_db
 from app.models.user import User
-from app.schemas.user import UserCreate, User as UserSchema
+from app.schemas.user import UserCreate, User as UserSchema, UserResponse
 from app.utils.auth import get_password_hash
 from app.routers.auth import get_current_user, get_required_user
 
 router = APIRouter()
 
 
-@router.post("/", response_model=UserSchema, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def create_user(user: UserCreate, db: Session = Depends(get_db)):
     """创建新用户"""
     # 检查是否存在同名用户
@@ -39,7 +39,7 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
     return db_user
 
 
-@router.get("/", response_model=List[UserSchema])
+@router.get("/", response_model=List[UserResponse])
 async def read_users(
     skip: int = 0,
     limit: int = 10,
@@ -52,7 +52,7 @@ async def read_users(
     return users
 
 
-@router.get("/{user_id}", response_model=UserSchema)
+@router.get("/{user_id}", response_model=UserResponse)
 async def read_user(
     user_id: int,
     db: Session = Depends(get_db),

@@ -238,6 +238,15 @@ async def get_permission_credentials(
     expiration = datetime.now(timezone.utc) + timedelta(seconds=expire_time)
     expiration_iso = expiration.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
 
+    # 生成回调配置
+    callback_object = {
+        "callbackUrl": oss_config.callback_url,
+        "callbackBody": f"object=${{object}}&size=${{size}}&mimeType=${{mimeType}}&etag=${{etag}}&user_id={operation_user_id}",
+        "callbackBodyType": "application/x-www-form-urlencoded"
+    }
+    base64_callback = base64.b64encode(
+        json.dumps(callback_object).encode()).decode()
+
     # 定义权限策略
     policy = {
         "expiration": expiration_iso,
@@ -263,6 +272,7 @@ async def get_permission_credentials(
         expire=int((datetime.now(timezone.utc) + 
                    timedelta(seconds=expire_time - 60)).timestamp()),
         dir=operation_dir,
-        permissions=permissions
+        permissions=permissions,
+        callback=base64_callback
     )
 
